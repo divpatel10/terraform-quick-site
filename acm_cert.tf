@@ -9,6 +9,10 @@ resource "aws_acm_certificate" "cert" {
 }
 
 
+data "aws_route53_zone" "zone" {
+  name         = "${var.domain_name}."
+  private_zone = false
+}
 resource "aws_route53_record" "cert_validation" {
   for_each = {
     for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
