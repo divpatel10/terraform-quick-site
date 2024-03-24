@@ -8,3 +8,8 @@ variable "domain_name" {
   type        = string
   default     = ""
 }
+
+variable "website_html" {
+    description = "The index.html file"
+    type = string
+}
