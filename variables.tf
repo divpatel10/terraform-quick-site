@@ -10,6 +10,6 @@ variable "domain_name" {
 }
 
 variable "website_html" {
-    description = "The index.html file"
+    description = "The path to the index.html file"
     type = string
 }
