@@ -1,46 +1,54 @@
-resource "aws_s3_bucket" "react_app_bucket" {
+resource "aws_s3_bucket" "site" {
   bucket = var.bucket_name
 }
 
+resource "aws_s3_bucket_public_access_block" "site" {
+  bucket = aws_s3_bucket.site.id
 
-data "aws_iam_policy_document" "public_read" {
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-
-    actions = [
-      "s3:GetObject",
-    ]
-
-    resources = [
-      "${aws_s3_bucket.react_app_bucket.arn}/*",
-    ]
-  }
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
-resource "aws_s3_bucket_policy" "react_app_bucket_policy" {
-  bucket = aws_s3_bucket.react_app_bucket.id
-  policy = data.aws_iam_policy_document.public_read.json
-}
 resource "aws_s3_bucket_website_configuration" "my_website" {
-  bucket = aws_s3_bucket.react_app_bucket.id
+  bucket = aws_s3_bucket.site.id
 
   index_document {
-    suffix = var.website_html
+    suffix = "index.html"
   }
 
   error_document {
-    key = var.website_html
-  }
-
-  routing_rule {
-    condition {
-      key_prefix_equals = "docs/"
-    }
-    redirect {
-      replace_key_prefix_with = "documents/"
-    }
+    key = "index.html"
   }
 }
+
+resource "aws_s3_object" "portfolio" {
+  for_each = fileset("${var.website_html}", "*")
+  bucket   = aws_s3_bucket.site.id
+  key      = each.value
+  source   = "${var.website_html}/${each.value}"
+  etag     = filemd5(".${var.website_html}/${each.value}")
+}
+
+
+resource "aws_s3_bucket_policy" "site_policy" {
+  bucket = aws_s3_bucket.site.id
+  policy = <<POLICY
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+    "Sid"       : "PublicReadGetObject",
+    "Effect"    : "Allow",
+    "Principal" : "*",
+    "Action"    : ["s3:GetObject"],
+    "Resource" : "${aws_s3_bucket.site.arn}/*"
+    }
+  ]
+  }
+  POLICY
+}
+
+
+
