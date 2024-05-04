@@ -9,6 +9,7 @@ variable "domain_name" {
   default     = ""
 }
 
+
 variable "website_html" {
     description = "The path to the index.html file"
     type = string
